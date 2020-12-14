@@ -1,4 +1,4 @@
-## Example formatting
+## Introduction
 
 A figure:
 
