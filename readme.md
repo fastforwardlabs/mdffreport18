@@ -1,7 +1,5 @@
 # Few-Shot Text Classification Report
 
-For a new report click `use this template` on github.com. Give it a title with the report number.
-
 # Dev
 
 Report repository template -- we use markdown now. Write markdown in the `src` directory. See `src/00a-example.md` for how to format.
