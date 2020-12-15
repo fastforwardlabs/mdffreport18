@@ -100,6 +100,6 @@ If we only have very few examples, _W_ will likely be quite close to the identit
 
 ![](figures/cosinesim_wmap.gif)
 
-It’s important to note that this technique is now akin to supervised learning: W is learned from training examples, and applied to test examples. However, notice that we have not specified whether _W_ is learned in a few-shot way (annotated examples for each relevant label) or in a zero-shot way (annotated examples for only a subset of the labels we are interested in). The approach is the same regardless, which is what makes this technique so flexible. 
+It’s important to note that this technique is now akin to supervised learning: _W_ is learned from training examples, and applied to test examples. However, notice that we have not specified whether _W_ is learned in a few-shot way (annotated examples for each relevant label) or in a zero-shot way (annotated examples for only a subset of the labels we are interested in). The approach is the same regardless, which is what makes this technique so flexible. 
 
 So how well does it work? Let’s find out.
