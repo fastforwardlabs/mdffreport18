@@ -22,7 +22,7 @@ Earlier, we talked about creating a mapping between SBERT and w2v spaces by comp
 
 Bigger isn’t always better. We explored the general effect on classification accuracy of a Zmap constructed from different numbers of words. We built a vocabulary from the most frequent words as measured over the corpus on which word2vec was trained. We first constructed Zmap from the top 100 most frequent words, then the top 200 most frequent words, and so on, until we’d included the top 100,000 most frequent words. With Zmap constructed, we then measured the accuracy of the resulting classification for both the AG News and Reddit datasets. The figure below shows the behavior we observed. As we increased the number of words used to construct Zmap, classification scores also increased, but only to a point. Eventually, after about 20,000 words, scores tended to decrease again. Why?
 
-![Note: In order to focus on the general shape of these curves, we constructed this figure using relative accuracy (that is, the accuracy of each Zmap experiment is divided by the accuracy of the best experiment overall for that dataset). You can see how we constructed these curves in our Colab notebook.](figures/Zmaps_howmanywords.png)
+![Note: In order to focus on the general shape of these curves, we constructed this figure using _relative_ accuracy (that is, the accuracy of each Zmap experiment is divided by the accuracy of the best experiment overall for that dataset). You can see how we constructed these curves in our Colab notebook.](figures/Zmaps_howmanywords.png)
 
 The answer is likely largely due to the fact that we’re including rarer words, which could be interpreted as noise. The words are in descending order by frequency; this means the most common words are at the “top,” so as we include more words, we’re including rarer words.
 
@@ -58,7 +58,24 @@ Rather than revealing a flaw in the method, we surmise that this is exactly what
 
 This example serves to highlight a limitation of the latent text embedding method: not only do category labels need to have semantic meaning, they also need to have specific semantic meaning to maximize the method’s utility. 
 
-In general, an optimal Zmap will usually provide a better representation for classification. We find that constructing it from a vocabulary of 20,000 words is sufficient, and those words can come either from the w2v corpus, or from your own corpus. This technique is entirely unsupervised (as these words come either from open sources or from your own data), and it requires zero annotated examples.
+In general, an optimal Zmap will _usually_ provide a better representation for classification. We find that constructing it from a vocabulary of 20,000 words is sufficient, and those words can come either from the w2v corpus, or from your own corpus. This technique is entirely unsupervised (as these words come either from open sources or from your own data), and it requires zero annotated examples.
 
-So far, our experiments have focused on the performance of the latent text embedding method that does not rely on any labeled data whatsoever. Let’s now turn to another, perhaps more likely scenario: having some labeled data, but perhaps not enough to rely on traditional supervised classification techniques.
+So far, our experiments have focused on the performance of the latent text embedding method that does not rely on any labeled data whatsoever. Let’s now turn to another, perhaps more likely scenario: having _some_ labeled data, but perhaps not enough to rely on traditional supervised classification techniques.
 
+### Few-shot text classification by optimizing Wmap
+
+We’ll start by assuming that our SBERT representations transformed by an optimal Zmap provide a good starting point for classification in latent space. We’ll then use labeled data to learn an _additional_ mapping, Wmap, between example representations and their corresponding label representations. Wmap will then be applied as a second transformation before classification.
+
+In general, Wmap provides a nice boost in classification accuracy on both the AG News and Reddit datasets, as shown below. In this figure, the blue bars represent measured accuracy after training on 500 AG News and 30 Reddit examples in each of their respective categories. This amounts to a total of 2,000 training examples for the AG News dataset, and 300 training examples in the Reddit dataset. Should we have used more labeled examples? Could we get away with fewer? 
+
+![](figures/accuracy_Wmap_agnews_reddit.png)
+
+It turns out that not only is this method great for limited amounts of labeled data, it can only handle limited amounts of labeled data! We explored how accuracy changed as a function of training on an increasing number of annotated examples. Known as learning curves, these figures are a quick way to assess the general performance of your model, as well as possible areas of overfitting.
+
+![](figures/learningcurves_agnews_reddit.png)
+
+In both cases, training with very few examples is likely to lead to overfitting, in which the model essentially memorizes the training set and thus does not generalize well to the test set. This happens even with a significant amount of regularization when training Wmap. However, we see this effect is mitigated when training on around 100 examples per category. The test accuracy plateaus quickly, which means that training on additional examples is unlikely to provide any further increase in accuracy. 
+
+To answer our earlier questions: for the AG News dataset, we probably didn’t need 500 examples per category; 100 each would have yielded similar results. For the Reddit dataset, 30 examples per category probably resulted in a slightly overfit Wmap. We would be better served if we doubled the number of training examples in each category. 
+
+It might seem disappointing that these scores plateau so quickly, and that it’s essentially useless to train on more than about 100 examples per category, but keep in mind that generalization in machine learning stems largely from the ability of the model to capture increasingly complex statistical patterns. This is typically only possible with larger models, i.e., more parameters. In our case, Wmap is a fixed size, and thus it is quickly saturated—which is why more training examples do not provide additional gains. But this is great news for learning with limited data; not only does the method work well in this regime, it’s actually perfectly suited! If you find yourself with more than a couple hundred labeled examples in each of your categories, you will likely be better off exploring a more traditional ML approach that can better capture the data’s complexity.
