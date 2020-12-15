@@ -46,7 +46,7 @@ Sentence-BERT (SBERT) addresses these issues. First [published](https://arxiv.or
 
 ### Improving this approach with Zmap
 
-Let’s take stock of and outline the latent text embedding method. For a document, d (e.g., a news article), we want to predict a label, l, from a set of possible labels. We apply SBERT to our document, d, and to each of the l labels, treating each label as a “sentence.” We then compute the cosine similarity between the document embedding and each of the label embeddings. We assign the label that maximizes the cosine similarity with the document embedding, indicating that these embeddings are most similar in SBERT latent space. This process can be succinctly expressed as:
+Let’s take stock of and outline the latent text embedding method. For a document, _d_ (e.g., a news article), we want to predict a label, _l_, from a set of possible labels. We apply SBERT to our document, _d_, and to each of the _l_ labels, treating each label as a “sentence.” We then compute the cosine similarity between the document embedding and each of the label embeddings. We assign the label that maximizes the cosine similarity with the document embedding, indicating that these embeddings are most similar in SBERT latent space. This process can be succinctly expressed as:
 
 ![](figures/cosinesim_basic.gif)
 
@@ -62,7 +62,7 @@ In a perfect world, we’d use SBERT to embed our documents, and w2v or GloVe to
 
 Instead, we can generate an approximation, by learning a mapping between individual words in SBERT space to those same words in w2v space. We begin by selecting a large vocabulary of words (we’ll come back to this) and obtaining both SBERT and w2v representations for each one. Next, we’ll perform a least-squares linear regression with l2 regularization between the SBERT representations and the w2v representations.^[It turns out that the solution to ordinary least squares with l2 regularization can be written as a concise equation, so we do not need to perform gradient descent to learn the weights. Instead, we need only invert a matrix. For intuition on how to interpret least squares as a linear algebra problem, check out this fantastic [blog post](https://medium.com/@andrew.chamberlain/the-linear-algebra-view-of-least-squares-regression-f67044b7f39b).]
 
-This results in a matrix, Z, which maps SBERT space to w2v space. We’ll use Z to transform both SBERT document representations (e.g., sentences) and SBERT label representations (e.g., words) into a new, lower-dimensional latent space, and perform our cosine similarity classification procedure in this new space.
+This results in a matrix, _Z_, which maps SBERT space to w2v space. We’ll use _Z_ to transform both SBERT document representations (e.g., sentences) and SBERT label representations (e.g., words) into a new, lower-dimensional latent space, and perform our cosine similarity classification procedure in this new space.
 
 ![Ideally we’d map SBERT sentence representations to w2v word representations but that requires labeled data. By mapping words in SBERT space to those same words in w2v space we can learn an approximate mapping between the two latent spaces.](figures/ff18-06.png)
 
@@ -70,9 +70,9 @@ This is how our classification model looks now:
 
 ![](figures/cosinesim_zmap.gif)
 
-All we’ve done is to multiply Z to both the document representation and the label representations, and then maximize the cosine similarity over the label set, as before. 
+All we’ve done is to multiply _Z_ to both the document representation and the label representations, and then maximize the cosine similarity over the label set, as before. 
 
-So where does this “large vocabulary of words” come from? One approach (used by the Hugging Face team) is to leverage the fact that w2v (and other popular open-source word embeddings) are trained on a massive corpus of text.  Most publicly released word representations are ordered by word frequency, with the most common words at the “top” and rare words at the “bottom.” This means that you can quickly identify a large vocabulary of the most frequently used words in that corpus. 
+So where does this “large vocabulary of words” come from? One approach (used by the Hugging Face team) is to leverage the fact that w2v (and other popular open-source word embeddings) are trained on a massive corpus of text.  Most publicly released word representations are ordered by word frequency, with the most common words at the “top” and rare words at the “bottom.” This means that you can quickly identify a large vocabulary of the most frequently used words _in that corpus_. 
 
 [Code snippet?] 
 
@@ -80,24 +80,26 @@ The assumption here is that learning a mapping between SBERT and w2v for the mos
 
 ### Incorporating labeled data
 
-Everything we’ve discussed so far has been under the premise that we have no labeled data whatsoever (“on-the-fly” learning). But what if you have some? The latent embedding approach is highly adaptable and can be modified to work with annotated examples in each category (few-shot learning), or when we might only have annotated examples for a subset of categories we’re interested in (traditional zero-shot learning). How do we take advantage of these labeled examples? We’ll follow the approach that the Hugging Face team outlines in their blog post, while hopefully providing a bit more context.
+Everything we’ve discussed so far has been under the premise that we have no labeled data whatsoever (“on-the-fly” learning). But what if you have _some_? The latent embedding approach is highly adaptable and can be modified to work with annotated examples in each category (few-shot learning), or when we might only have annotated examples for a subset of categories we’re interested in (traditional zero-shot learning). How do we take advantage of these labeled examples? We’ll follow the approach that the Hugging Face team outlines in their blog post, while hopefully providing a bit more context.
 
-This method involves learning another mapping, this time between the documents and their labels—but we need to be careful not to overfit to our few annotated examples. Our goal is to learn a transformation that will rely on the semantic richness of our representations so far (i.e., multiplying SBERT embeddings by Z), while still allowing us to incorporate information from the labeled examples.
+This method involves learning another mapping, this time between the documents and their labels—but we need to be careful not to overfit to our few annotated examples. Our goal is to learn a transformation that will rely on the semantic richness of our representations so far (i.e., multiplying SBERT embeddings by _Z_), while still allowing us to incorporate information from the labeled examples.
 
 One way to accomplish this is to modify the regularization term in the linear regression. Before looking at this modification, let’s take a closer look at the traditional objective function for least-squares with l2 regularization in order to get a feel for how this is accomplished.
 
-Weights, W, are learned through minimizing the loss function, as expressed below:
+Weights, _W_, are learned through minimizing the loss function, as expressed below:
 
 ![](figures/lossfunction1.gif)
 
-The first term essentially tells W how to match an input, X, to an output, Y. The second term effectively minimizes the norm of the weights. The result is a set of regularized weights that map X to Y (which was exactly what we wanted in the previous section). Now we’ll modify the regularization term:
+The first term essentially tells _W_ how to match an input, _X_, to an output, _Y_. The second term effectively minimizes the norm of the weights. The result is a set of regularized weights that map _X_ to _Y_ (which was exactly what we wanted in the previous section). Now we’ll modify the regularization term:
 
 ![](figures/lossfunction2.gif)
 
-The first term still tells W how to map X to Y, but in the second term, the elements of the weight matrix are now pushed towards the identity matrix.^[As the Hugging Face team points out, this is equivalent to Bayesian linear regression with a Gaussian prior on the weights, centered at the identity matrix. Our prior belief is that our embedding mechanism, SBERT_(d_)Z, produces good text representations, and we only update this belief (move away from the identity matrix) as we see more training examples.]
+The first term still tells _W_ how to map _X_ to _Y_, but in the second term, the elements of the weight matrix are now pushed towards the identity matrix.^[As the Hugging Face team points out, this is equivalent to Bayesian linear regression with a Gaussian prior on the weights, centered at the identity matrix. Our prior belief is that our embedding mechanism, SBERT(d)Z, produces good text representations, and we only update this belief (move away from the identity matrix) as we see more training examples.]
 
-If we only have very few examples, W will likely be quite close to the identity matrix. This means that when we apply W to our representations, (SBERT(d)ZW) will be very close to SBERT(d)Z. This is exactly what we want: to rely strongly on our original representations in the face of few examples. If we have many examples to learn from, W will be pushed further away from the identity matrix, in which case W will more strongly modify the composition of SBERT(d)ZW, potentially changing the predicted label for the document, d. Our final classification procedure now looks like this: 
+If we only have very few examples, _W_ will likely be quite close to the identity matrix. This means that when we apply _W_ to our representations, (SBERT(d)ZW) will be very close to SBERT(d)Z. This is exactly what we want: to rely strongly on our original representations in the face of few examples. If we have many examples to learn from, W will be pushed further away from the identity matrix, in which case _W_ will more strongly modify the composition of SBERT(d)ZW, potentially changing the predicted label for the document, _d_. Our final classification procedure now looks like this:
 
-It’s important to note that this technique is now akin to supervised learning: W is learned from training examples, and applied to test examples. However, notice that we have not specified whether W is learned in a few-shot way (annotated examples for each relevant label) or in a zero-shot way (annotated examples for only a subset of the labels we are interested in). The approach is the same regardless, which is what makes this technique so flexible. 
+![](figures/cosinesim_wmap.gif)
+
+It’s important to note that this technique is now akin to supervised learning: W is learned from training examples, and applied to test examples. However, notice that we have not specified whether _W_ is learned in a few-shot way (annotated examples for each relevant label) or in a zero-shot way (annotated examples for only a subset of the labels we are interested in). The approach is the same regardless, which is what makes this technique so flexible. 
 
 So how well does it work? Let’s find out.
