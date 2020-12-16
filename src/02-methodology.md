@@ -2,23 +2,23 @@
 
 The NLP research team at Hugging Face recently published a [blog post](https://joeddav.github.io/blog/2020/05/29/ZSL.html) that detailed a handful of promising zero-shot text classification methods. We decided to dig a little deeper into one of these methods ourselves. It’s an oldie, but a goodie; we’ll explore how text embeddings can be used for classification.
 
-First, an embedding method is used to generate a document representation and, separately, representations for each of the possible class labels. A document is then assigned the label that lies closest to it in the text embedding space. Note that we do not necessarily need the documents to be labeled a priori (in contrast to supervised learning, in which the model learns relationships explicitly from labeled examples). 
+First, an embedding method is used to generate a document representation and, separately, representations for each of the possible class labels. A document is then assigned the label that lies closest to it in the text embedding space. Note that we do not necessarily need the documents to be labeled _a priori_ (in contrast to supervised learning, in which the model learns relationships explicitly from labeled examples). 
 
-This method hinges on the idea that people can categorize documents into named categories without training, because we understand the meaning of the category labels. For example, when reviewing news articles, we can determine whether an article belongs under Science and Technology or Business (or both!) because the words “Science,” “Technology,” and “Business” each have semantic meaning associated with them. The intrinsic meaning of words (in particular, the class labels) is information that we leverage for classification. 
+This method hinges on the idea that people can categorize documents into named categories without training, because we understand the _meaning_ of the category labels. For example, when reviewing news articles, we can determine whether an article belongs under _Science and Technology_ or _Business_ (or both!) because the words “Science,” “Technology,” and “Business” each have semantic meaning associated with them. The intrinsic meaning of words (in particular, the class labels) is information that we leverage for classification. 
 
 ![](figures/ff18-01.png)
 
-Let’s look at an example of how text embeddings can mimic this approach. First, suppose we have a collection of news articles that we’d like to classify into one of the following categories: *World News*, *Business*, *Science & Technology*, or *Sports*. Next, let’s assume we have a method (the “Embedding Model”) that can assign numeric vectors to text segments. We’ll use the Embedding Model to embed our news article and each of our labels into **latent space**. (A latent space is simply a compressed representation of the data in which similar data points are closer together).
+Let’s look at an example of how text embeddings can mimic this approach. First, suppose we have a collection of news articles that we’d like to classify into one of the following categories: _World News_, _Business_, _Science & Technology_, or _Sports_. Next, let’s assume we have a method (the “Embedding Model”) that can assign numeric vectors to text segments. We’ll use the Embedding Model to embed our news article and each of our labels into **latent space**. (A latent space is simply a compressed representation of the data in which similar data points are closer together).
 
-Suppose this is one of our news articles: “[Breaking baseball barriers: Marlins announce first female GM in MLB history](https://www.kare11.com/article/sports/breaking-baseball-barriers-marlins-announce-first-female-gm-in-mlb-history/89-db8297a4-af08-4899-9e1f-38f9ddb3bcce).” We’ll pass the text of this article (along with the labels) through our Embedding Model, similar to (though not precisely) as shown below. 
+Suppose this is one of our news articles: “[Breaking baseball barriers: Marlins announce first female GM in MLB history](https://www.kare11.com/article/sports/breaking-baseball-barriers-marlins-announce-first-female-gm-in-mlb-history/89-db8297a4-af08-4899-9e1f-38f9ddb3bcce).” We’ll pass the text of this article (along with the labels) through our Embedding Model, similar to (though not precisely as) what is shown below. 
 
 ![A news article and each of the labels are passed through the Embedding Model to generate vector representations for each text segment.](figures/ff18-02.png)
 
 This produces embedding vectors which we can plot in our latent space: 
 
-![Each of the vectors (one for the news article, and one each for the labels) can be represented in latent space. The article is closest to the word "Sports" in latent space, so *Sports* is assigned as the label.](figures/ff18-03.png)
+![Each of the vectors (one for the news article, and one each for the labels) can be represented in latent space. The article is closest to the word "Sports" in latent space, so _Sports_ is assigned as the label.](figures/ff18-03.png)
 
-We can now use a similarity metric (like cosine similarity) to compute which of the labels is closest to our news article in latent space, indicating that these text segments are the most similar. In this example, our article is closest to the word “Sports,” so we assign Sports as the label. This is because the word “Sports” is semantically similar to the word “Baseball,” which is the topic of our news article. It was this similarity between words and sentences that allowed us to label the news article—we didn’t use training data at all! 
+We can now use a similarity metric (like cosine similarity) to compute which of the labels is closest to our news article in latent space, indicating that these text segments are the most similar. In this example, our article is closest to the word “Sports,” so we assign _Sports_ as the label. This is because the word “Sports” is semantically similar to the word “Baseball,” which is the topic of our news article. It was this similarity between words and sentences that allowed us to label the news article—we didn’t use training data at all! 
 
 Now, of course, we’ve left a lot out of the discussion. Most pressing: what is this mysterious Embedding Model? And what if we have some labeled examples? And is it really this simple? (Spoiler alert: not quite.) Let’s explore these questions. 
 
@@ -30,7 +30,7 @@ Representing text numerically is not a new idea, and can be as simple as a **bag
 
 In contrast, sentence embedding methods embed whole sentences or paragraphs; an early example is **[Doc2Vec](https://arxiv.org/pdf/1405.4053.pdf)**, which is similar to word2vec, but additionally learns a vector for the whole paragraph. More recent models include **[InferSent](https://arxiv.org/pdf/1705.02364.pdf)** and **[Universal Sentence Encoder](https://arxiv.org/pdf/1803.11175.pdf)**.  Sentence embedding methods obviate the need for ad hoc aggregation techniques, and typically better capture the semantic meaning of whole text segments (as compared to aggregating word embeddings). 
 
-Recent advances in sentence embedding methods have prompted us to re-evaluate the latent embedding approach. But first, what about BERT? Isn’t that all the rage these days for *everything* NLP-related? Shouldn’t we just use BERT to embed our text?
+Recent advances in sentence embedding methods have prompted us to re-evaluate the latent embedding approach. But first, what about BERT? Isn’t that all the rage these days for _everything_ NLP-related? Shouldn’t we just use BERT to embed our text?
 
 #### To BERT or not to BERT
 
@@ -56,11 +56,11 @@ We then repeat this for every document in our collection, and voilà!
 
 This actually works relatively well, depending (of course) on the dataset, and the quality and number of labels. But Sentence-BERT has been optimized… well, for sentences! It’s reasonable to suspect that SBERT’s representations of single words or short phrases like “Business” or “Science & Technology” won’t be as semantically relevant as representations derived from a word-level method, like word2vec or GloVe. This means, for example, that the word2vec representation of “Business” could well have a more meaningful relationship with other words in the word2vec latent space than its SBERT representation in SBERT latent space.  
 
-![Left: In w2v latent space there tends to exist structure between similar words. Here, "Game" is a singular event in "Sports," while "Company" is a singular entity conducting "Business." Right: SBERT space is unlikely to have a similar structure between individual words, making it challenging to rely on SBERT label representations alone for classification. ](figures/ff18-04.png)
+![Left: In w2v latent space, there tends to exist structure between similar words. Here, "Game" is a singular event in "Sports," while "Company" is a singular entity conducting "Business." Right: SBERT space is unlikely to have a similar structure between individual words, making it challenging to rely on SBERT label representations alone for classification.](figures/ff18-04.png)
 
 In a perfect world, we’d use SBERT to embed our documents, and w2v or GloVe to embed our class labels. Unfortunately, these embedding spaces do not have any inherent relationship between them, so we would have no way to know which labels were closest to our document. We could learn a relationship between these two spaces, but in order to do that, we'd need some annotated data—which defeats the purpose of zero-shot learning! 
 
-![Left: Ideally we’d map SBERT sentence representations to w2v word representations but that requires labeled data. Right: By mapping words in SBERT space to those same words in w2v space we can learn an approximate mapping between the two latent spaces.](figures/ff18-06.png)
+![Left: Ideally, we’d map SBERT sentence representations to w2v word representations, but that requires labeled data. Right: By mapping words in SBERT space to those same words in w2v space, we can learn an approximate mapping between the two latent spaces.](figures/ff18-06.png)
 
 Instead, we can generate an approximation, by learning a mapping between individual words in SBERT space to those same words in w2v space. We begin by selecting a large vocabulary of words (we’ll come back to this) and obtaining both SBERT and w2v representations for each one. Next, we’ll perform a least-squares linear regression with l2 regularization between the SBERT representations and the w2v representations.^[It turns out that the solution to ordinary least squares with l2 regularization can be written as a concise equation, so we do not need to perform gradient descent to learn the weights. Instead, we need only invert a matrix. For intuition on how to interpret least squares as a linear algebra problem, check out this fantastic [blog post](https://medium.com/@andrew.chamberlain/the-linear-algebra-view-of-least-squares-regression-f67044b7f39b).]
 
@@ -74,7 +74,7 @@ This is how our classification model looks now:
   <img src="figures/cosinesim_zmap.gif" style="max-width: 360px;" />
 </figure>
 
-All we’ve done is to multiply _Z_ to both the document representation and the label representations, and then maximize the cosine similarity over the label set, as before. 
+All we’ve done is multiply _Z_ to both the document representation and the label representations, and then maximize the cosine similarity over the label set, as before. 
 
 So where does this “large vocabulary of words” come from? One approach (used by the Hugging Face team) is to leverage the fact that w2v (and other popular open-source word embeddings) is trained on a massive corpus of text.  Most publicly released word representations are ordered by word frequency, with the most common words at the “top” and rare words at the “bottom.” This means that you can quickly identify a large vocabulary of the most frequently used words _in that corpus_. 
 
