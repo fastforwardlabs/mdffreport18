@@ -6,7 +6,7 @@ While the latent text embedding approach provides a flexible and semi-interpreta
 
 Let’s address the elephant in the room: we had access to labeled training and test sets for all the experiments performed for this report, which is how we were able to assess the performance of Zmap. In a real-world, “on-the-fly,” no-labeled-data-available situation, validating the results of the method is essentially impossible. This is why we spent time looking for possible generalities that could provide guidance on how to use this method in a practical application—but, as we saw with the Reddit dataset, sometimes Zmap actually makes your classification accuracy worse! And without labeled data to validate the method, you will have no way of knowing if this is the case for your data.  
 
-This isn’t solely an issue with the latent text embedding approach—this is a challenge for any unsupervised learning situation. The solution, unfortunately, is to simply buckle down and label some data! As we saw, even just a couple hundred examples can provide a wealth of insight and performance gains.
+This isn’t solely an issue with the latent text embedding approach—this is a challenge for _any_ unsupervised learning situation. The solution, unfortunately, is to simply buckle down and label some data! As we saw, even just a couple hundred examples can provide a wealth of insight and performance gains.
 
 ### Meaningful labels are a necessity
 
