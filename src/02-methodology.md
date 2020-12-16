@@ -48,7 +48,9 @@ Sentence-BERT (**SBERT**) addresses these issues. First [published](https://arxi
 
 Let’s take stock of and outline the latent text embedding method. For a document, _d_ (e.g., a news article), we want to predict a label, _l_, from a set of possible labels. We apply SBERT to our document, _d_, and to each of the _l_ labels, treating each label as a “sentence.” We then compute the cosine similarity between the document embedding and each of the label embeddings. We assign the label that maximizes the cosine similarity with the document embedding, indicating that these embeddings are most similar in SBERT latent space. This process can be succinctly expressed as:
 
-![](figures/cosinesim_basic.gif)
+<figure>
+  <img src="figures/cosinesim_basic.gif" style="max-width: 360px;" />
+</figure>
 
 We then repeat this for every document in our collection, and voilà! 
 
@@ -68,7 +70,9 @@ This results in a matrix, _Z_, which maps SBERT space to w2v space. We’ll use 
 
 This is how our classification model looks now: 
 
-![](figures/cosinesim_zmap.gif)
+<figure>
+  <img src="figures/cosinesim_zmap.gif" style="max-width: 360px;" />
+</figure>
 
 All we’ve done is to multiply _Z_ to both the document representation and the label representations, and then maximize the cosine similarity over the label set, as before. 
 
@@ -86,17 +90,23 @@ One way to accomplish this is to modify the regularization term in the linear re
 
 Weights, _W_, are learned through minimizing the loss function, as expressed below:
 
-![](figures/lossfunction1.gif)
+<figure>
+  <img src="figures/lossfunction1.gif" style="max-width: 360px;" />
+</figure>
 
 The first term essentially tells _W_ how to match an input, _X_, to an output, _Y_. The second term effectively minimizes the norm of the weights. The result is a set of regularized weights that map _X_ to _Y_ (which was exactly what we wanted in the previous section). Now we’ll modify the regularization term:
 
-![](figures/lossfunction2.gif)
+<figure>
+  <img src="figures/lossfunction2.gif" style="max-width: 360px;" />
+</figure>
 
 The first term still tells _W_ how to map _X_ to _Y_, but in the second term, the elements of the weight matrix are now pushed towards the identity matrix.^[As the Hugging Face team points out, this is equivalent to Bayesian linear regression with a Gaussian prior on the weights, centered at the identity matrix. Our prior belief is that our embedding mechanism, SBERT(d)Z, produces good text representations, and we only update this belief (move away from the identity matrix) as we see more training examples.]
 
 If we only have very few examples, _W_ will likely be quite close to the identity matrix. This means that when we apply _W_ to our representations, SBERT(d)ZW will be very close to SBERT(d)Z. This is exactly what we want: to rely strongly on our original representations in the face of few examples. If we have many examples to learn from, _W_ will be pushed further away from the identity matrix, in which case it will more strongly modify the composition of SBERT(d)ZW, potentially changing the predicted label for the document, _d_. Our final classification procedure now looks like this:
 
-![](figures/cosinesim_wmap.gif)
+<figure>
+  <img src="figures/cosinesim_wmap.gif" style="max-width: 360px;" />
+</figure>
 
 It’s important to note that this technique is now akin to supervised learning: _W_ is learned from training examples, and applied to test examples. However, notice that we have not specified whether _W_ is learned in a few-shot way (annotated examples for each relevant label) or in a zero-shot way (annotated examples for only a subset of the labels we are interested in). The approach is the same regardless, which is what makes this technique so flexible. 
 
