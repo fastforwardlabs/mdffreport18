@@ -1,4 +1,4 @@
-## Methodology: Latent Text Embeddings
+## Latent Text Embeddings
 
 The NLP research team at Hugging Face recently published a [blog post](https://joeddav.github.io/blog/2020/05/29/ZSL.html) that detailed a handful of promising zero-shot text classification methods. We decided to dig a little deeper into one of these methods ourselves. It’s an oldie, but a goodie; we’ll explore how text embeddings can be used for classification.
 
@@ -8,15 +8,15 @@ This method hinges on the idea that people can categorize documents into named c
 
 ![](figures/ff18-01.png)
 
-Let’s look at an example of how text embeddings can mimic this approach. First, suppose we have a collection of news articles that we’d like to classify into one of four categories: World News, Business, Science & Technology, or Sports. Next, let’s assume we have a method (the “Embedding Model”) that can assign numeric vectors to text segments. We’ll use the Embedding Model to embed our news article and each of our four labels into **latent space**. (A latent space is simply a compressed representation of the data in which similar data points are closer together).
+Let’s look at an example of how text embeddings can mimic this approach. First, suppose we have a collection of news articles that we’d like to classify into one of the following categories: *World News*, *Business*, *Science & Technology*, or *Sports*. Next, let’s assume we have a method (the “Embedding Model”) that can assign numeric vectors to text segments. We’ll use the Embedding Model to embed our news article and each of our labels into **latent space**. (A latent space is simply a compressed representation of the data in which similar data points are closer together).
 
-Suppose this is one of our news articles: “[Breaking baseball barriers: Marlins announce first female GM in MLB history](https://www.kare11.com/article/sports/breaking-baseball-barriers-marlins-announce-first-female-gm-in-mlb-history/89-db8297a4-af08-4899-9e1f-38f9ddb3bcce).” We’ll pass the text of this article (along with the four labels) through our Embedding Model, as shown below. 
+Suppose this is one of our news articles: “[Breaking baseball barriers: Marlins announce first female GM in MLB history](https://www.kare11.com/article/sports/breaking-baseball-barriers-marlins-announce-first-female-gm-in-mlb-history/89-db8297a4-af08-4899-9e1f-38f9ddb3bcce).” We’ll pass the text of this article (along with the labels) through our Embedding Model, similar to (though not precisely) as shown below. 
 
-![A news article and each of the four labels are passed through the Embedding Model to generate vector representations for each text segment.](figures/ff18-02.png)
+![A news article and each of the labels are passed through the Embedding Model to generate vector representations for each text segment.](figures/ff18-02.png)
 
-This produces five embedding vectors which we can plot in our latent space: 
+This produces embedding vectors which we can plot in our latent space: 
 
-![Each of the five vectors (one for the news article, and one each for the four labels) can be represented in latent space.](figures/ff18-03)
+![Each of the vectors (one for the news article, and one each for the labels) can be represented in latent space. The article is closest to the word "Sports" in latent space, so *Sports* is assigned as the label.](figures/ff18-03.png)
 
 We can now use a similarity metric (like cosine similarity) to compute which of the labels is closest to our news article in latent space, indicating that these text segments are the most similar. In this example, our article is closest to the word “Sports,” so we assign Sports as the label. This is because the word “Sports” is semantically similar to the word “Baseball,” which is the topic of our news article. It was this similarity between words and sentences that allowed us to label the news article—we didn’t use training data at all! 
 
